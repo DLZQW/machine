@@ -1,18 +1,14 @@
+// File: src/main/java/com/vending/service/DiscountEngine.java
 package com.vending.service;
 
 import com.vending.model.Drink;
 
-/**
- * 複雜業務邏輯範例：動態定價與行銷引擎
- * 包含多重策略以最大化 WMC
- */
 public class DiscountEngine {
 
   public int applyPromotion(Drink drink, int currentBalance, boolean isVip) {
     int originalPrice = drink.getPrice();
     double finalPrice = originalPrice;
 
-    // 1. 類別策略
     String category = determineCategory(drink.getName());
     if ("COFFEE".equals(category)) {
       if (isVip) finalPrice *= 0.85;
@@ -22,7 +18,6 @@ public class DiscountEngine {
       if (originalPrice >= 25) finalPrice -= 2;
     }
 
-    // 2. 庫存壓力策略
     int stock = drink.getStock();
     if (stock > 15) {
       if (originalPrice > 30) finalPrice -= 5;
@@ -31,31 +26,21 @@ public class DiscountEngine {
       if (finalPrice < originalPrice * 0.9) finalPrice = originalPrice * 0.9;
     }
 
-    // 3. ★★★ 補回測試需要的邊界規則 (增加 WMC) ★★★
-    // 測試要求: if (balance > 100 || price > 40) -> -5 / -10
     if (currentBalance > 100 || originalPrice > 40) {
       if (!isVip) {
-        // 避免重複扣款太嚴重，做個檢查
-        if (finalPrice == originalPrice) finalPrice -= 5;
+        if (finalPrice >= originalPrice - 2) finalPrice -= 5;
       } else {
         finalPrice -= 10;
       }
     }
 
-    // 4. 會員積分與幸運指數策略
     int luck = calculateLuckFactor(drink, currentBalance);
-    if (luck > 10) {
-      finalPrice -= 1; // 幸運折抵
-    }
+    if (luck > 10) finalPrice -= 1;
 
     int memberScore = calculateMemberScore(isVip);
-    if (memberScore > 100) {
-      finalPrice -= 1;
-    } else if (memberScore < 0) {
-      finalPrice = originalPrice;
-    }
+    if (memberScore > 100) finalPrice -= 1;
+    else if (memberScore < 0) finalPrice = originalPrice;
 
-    // 5. 邊界檢查
     int result = (int) finalPrice;
     if (result < 0) result = 0;
     if (result < originalPrice / 2) result = originalPrice / 2;
@@ -90,7 +75,6 @@ public class DiscountEngine {
   public String generateMarketingMessage(Drink drink) {
     String msg = "";
     int price = drink.getPrice();
-
     if (price >= 40) msg += "奢華享受 ";
     else if (price <= 15) msg += "超值首選 ";
 
