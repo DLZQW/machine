@@ -264,6 +264,9 @@ class VendingMachineTest {
     vm.dispense();
     vm.cancel();
 
+    // ★★★ 請加入這行：測試待機狀態下輸入錯誤密碼 ★★★
+    vm.enterMaintenance("wrong_password"); // 覆蓋 if 的 false 分支
+
     // ★★★ 新增：覆蓋 IdleState.maintenance 的成功分支 ★★★
     vm.enterMaintenance("admin123");
 
