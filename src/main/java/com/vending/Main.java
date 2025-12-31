@@ -1,8 +1,15 @@
+// File: src/main/java/com/vending/Main.java
 package com.vending;
 
 import com.vending.core.VendingMachine;
 
 public class Main {
+
+  // ★★★ 新增：私有建構子，解決 "Utility class should not have public constructor" ★★★
+  private Main() {
+    throw new IllegalStateException("Utility class");
+  }
+
   public static void main(String[] args) {
     VendingMachine vm = new VendingMachine();
 
