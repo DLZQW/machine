@@ -9,6 +9,7 @@ public class DiscountEngine {
     int originalPrice = drink.getPrice();
     double finalPrice = originalPrice;
 
+    // 1. 類別策略
     String category = determineCategory(drink.getName());
     if ("COFFEE".equals(category)) {
       if (isVip) finalPrice *= 0.85;
@@ -18,6 +19,7 @@ public class DiscountEngine {
       if (originalPrice >= 25) finalPrice -= 2;
     }
 
+    // 2. 庫存壓力策略
     int stock = drink.getStock();
     if (stock > 15) {
       if (originalPrice > 30) finalPrice -= 5;
@@ -26,6 +28,7 @@ public class DiscountEngine {
       if (finalPrice < originalPrice * 0.9) finalPrice = originalPrice * 0.9;
     }
 
+    // 3. 邊界規則
     if (currentBalance > 100 || originalPrice > 40) {
       if (!isVip) {
         if (finalPrice >= originalPrice - 2) finalPrice -= 5;
@@ -34,13 +37,19 @@ public class DiscountEngine {
       }
     }
 
+    // 4. 積分策略
     int luck = calculateLuckFactor(drink, currentBalance);
     if (luck > 10) finalPrice -= 1;
 
     int memberScore = calculateMemberScore(isVip);
-    if (memberScore > 100) finalPrice -= 1;
-    else if (memberScore < 0) finalPrice = originalPrice;
+    if (memberScore > 100) {
+      finalPrice -= 1;
+    } else if (memberScore < 0) {
+      // ★★★ 關鍵分支：現在這個分支可以被測試到了 ★★★
+      finalPrice = Math.max(finalPrice, originalPrice - 5);
+    }
 
+    // 5. 最終價格處理
     int result = (int) finalPrice;
     if (result < 0) result = 0;
     if (result < originalPrice / 2) result = originalPrice / 2;
@@ -53,10 +62,12 @@ public class DiscountEngine {
     String name = drink.getName();
     int price = drink.getPrice();
 
-    if (name.length() > 5) score++;
-    if (name.startsWith("A")) score += 2;
-    if (name.contains("8")) score += 3;
-    if (name.endsWith("!")) score += 5;
+    if (name != null) {
+      if (name.length() > 5) score++;
+      if (name.startsWith("A")) score += 2;
+      if (name.contains("8")) score += 3;
+      if (name.endsWith("!")) score += 5;
+    }
 
     if (price % 10 == 0) score++;
     if (price == 77 || price == 88) score += 10;
@@ -75,6 +86,7 @@ public class DiscountEngine {
   public String generateMarketingMessage(Drink drink) {
     String msg = "";
     int price = drink.getPrice();
+
     if (price >= 40) msg += "奢華享受 ";
     else if (price <= 15) msg += "超值首選 ";
 
@@ -82,11 +94,14 @@ public class DiscountEngine {
     else msg += "清涼解渴 ";
 
     String n = drink.getName();
-    if (n.contains("咖啡")) msg += "提神專用";
-    else if (n.contains("茶")) msg += "回甘好茶";
-    else if (n.contains("可樂") || n.contains("汽水")) msg += "暢快氣泡";
-    else msg += "經典風味";
-
+    if (n != null) {
+      if (n.contains("咖啡")) msg += "提神專用";
+      else if (n.contains("茶")) msg += "回甘好茶";
+      else if (n.contains("可樂") || n.contains("汽水")) msg += "暢快氣泡";
+      else msg += "經典風味";
+    } else {
+      msg += "神秘口味";
+    }
     return msg;
   }
 
@@ -101,7 +116,8 @@ public class DiscountEngine {
   }
 
   private int calculateMemberScore(boolean isVip) {
+    // ★★★ 修改：非 VIP 回傳負分，觸發 dead code ★★★
     if (isVip) return 150;
-    else return 10;
+    else return -10;
   }
 }

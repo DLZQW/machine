@@ -1,4 +1,3 @@
-// File: src/main/java/com/vending/state/MaintenanceState.java
 package com.vending.state;
 
 import com.vending.core.VendingMachine;
@@ -7,8 +6,6 @@ import java.util.Map;
 
 public class MaintenanceState implements VendingMachineState {
   private final VendingMachine machine;
-
-  // Reflection targets
   private boolean wifi = true;
   private boolean sim4g = true;
   private int currentVoltage = 110;

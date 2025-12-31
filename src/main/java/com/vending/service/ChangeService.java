@@ -1,4 +1,3 @@
-// File: src/main/java/com/vending/service/ChangeService.java
 package com.vending.service;
 
 import java.util.HashMap;
