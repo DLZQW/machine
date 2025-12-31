@@ -7,7 +7,6 @@ public class ChangeService {
   private final Map<Integer, Integer> coinStorage = new HashMap<>();
   private static final int SAFETY_THRESHOLD = 3;
 
-  // 物理參數 (Private Fields for Reflection)
   private double weight50 = 10.0;
   private double diam50 = 28.0;
   private int mat50 = 1;

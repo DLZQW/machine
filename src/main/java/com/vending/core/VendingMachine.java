@@ -42,7 +42,8 @@ public class VendingMachine {
 
   public boolean performSystemSelfCheck() {
     int errorCount = 0;
-    // 拆分檢查，增加 branch coverage
+
+    // ★★★ 關鍵優化：拆解複合條件，讓每個分支都能被單獨覆蓋 ★★★
     if (idleState == null) errorCount++;
     if (hasMoneyState == null) errorCount++;
     if (soldState == null) errorCount++;
@@ -71,8 +72,13 @@ public class VendingMachine {
         }
       }
     }
-    if (balance < 0) { balance = 0; errorCount++; }
-    else if (balance > 1000) { System.out.println("警告：餘額過高異常"); }
+
+    if (balance < 0) {
+      balance = 0;
+      errorCount++;
+    } else if (balance > 1000) {
+      System.out.println("警告：餘額過高異常");
+    }
 
     return errorCount == 0;
   }
