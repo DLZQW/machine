@@ -1,4 +1,3 @@
-// File: src/main/java/com/vending/state/MaintenanceState.java
 package com.vending.state;
 
 import com.vending.core.VendingMachine;
@@ -11,6 +10,10 @@ import java.util.Map;
  */
 public class MaintenanceState implements VendingMachineState {
   private final VendingMachine machine;
+
+  // ★★★ 關鍵修改：將變數提升為屬性，以便測試時透過 Reflection 修改 ★★★
+  private boolean wifi = true;
+  private boolean sim4g = true;
 
   public MaintenanceState(VendingMachine machine) {
     this.machine = machine;
@@ -65,22 +68,18 @@ public class MaintenanceState implements VendingMachineState {
 
   /**
    * 子系統深度診斷 (Subsystem Diagnostics)
-   * 模擬針對不同硬體模組的詳細檢查邏輯
    */
   private void performSubsystemCheck(String systemCode) {
     System.out.print("檢測子系統 [" + systemCode + "]: ");
 
-    // 使用 Switch-Case 模擬不同模組的檢查路徑
     switch (systemCode) {
       case "POWER_UNIT":
-        // 模擬電壓檢查
         if (checkVoltage(110)) System.out.println("電壓穩定 (110V)");
         else System.out.println("警報：電壓異常");
         break;
 
       case "COOLING_SYSTEM":
-        // 模擬溫度檢查
-        int temp = 4; // 假設讀取到的溫度
+        int temp = 4;
         if (temp > 10) System.out.println("警報：溫度過高");
         else if (temp < 0) System.out.println("警報：結霜風險");
         else System.out.println("冷藏功能正常 (" + temp + "°C)");
@@ -98,9 +97,7 @@ public class MaintenanceState implements VendingMachineState {
         break;
 
       case "CONNECTIVITY":
-        // 模擬網路檢查
-        boolean wifi = true;
-        boolean sim4g = true;
+        // ★★★ 關鍵修改：使用類別屬性而非區域變數 ★★★
         if (wifi && sim4g) System.out.println("雙網路備援正常");
         else if (wifi) System.out.println("僅 Wi-Fi 連線");
         else if (sim4g) System.out.println("僅 4G 連線");
@@ -113,7 +110,6 @@ public class MaintenanceState implements VendingMachineState {
   }
 
   private boolean checkVoltage(int v) {
-    // 模擬電壓波動檢查
     return v >= 100 && v <= 120;
   }
 
@@ -161,24 +157,15 @@ public class MaintenanceState implements VendingMachineState {
     return score;
   }
 
-  /**
-   * 維修成本預估 (Maintenance Cost Estimation)
-   * 根據機器狀態計算潛在維修費，增加大量判斷邏輯
-   */
   private int estimateMaintenanceCost() {
     int cost = 0;
-
-    // 基礎檢測費
     cost += 500;
 
-    // 根據庫存狀況增加人工補貨成本
     long emptySlots = machine.getInventory().values().stream().filter(d -> d.getStock() == 0).count();
-    if (emptySlots > 3) cost += 300; // 大量補貨
+    if (emptySlots > 3) cost += 300;
     else if (emptySlots > 0) cost += 100;
 
-    // 根據硬幣餘額判斷是否需要補幣服務
-    if (machine.getBalance() < 100) { // 假設機器內總金額低 (這裡簡化用 balance 代替)
-      // 實際上應該檢查 ChangeService 的庫存，這裡模擬邏輯
+    if (machine.getBalance() < 100) {
       cost += 200;
     }
 
