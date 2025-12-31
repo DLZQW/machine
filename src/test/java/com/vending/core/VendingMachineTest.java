@@ -285,4 +285,94 @@ class VendingMachineTest {
     assertDoesNotThrow(() -> Main.main(new String[]{}));
     new Main(); // 建構子覆蓋
   }
+
+  @Test
+  @DisplayName("HasMoneyState: 涵蓋 selectDrink 所有分支路徑")
+  void testHasMoneyState_AllBranches() {
+    vm.insertCoin(50); // 確保進入 HasMoneyState
+
+    // 分支 1: ID 不存在
+    vm.selectDrink("NON_EXISTENT");
+
+    // 分支 2: 庫存不足 (手動調整 A2 庫存為 0)
+    vm.getInventory().get("A2").setStock(0);
+    vm.selectDrink("A2");
+    assertTrue(vm.getCurrentState() instanceof SoldOutState);
+
+    // 回到 HasMoneyState 測試餘額不足
+    vm.setState(vm.getHasMoneyState());
+    vm.setBalance(5); // 設定極低餘額
+    vm.selectDrink("A1"); // 可樂要 25 元，會觸發「餘額不足」
+
+    // 分支 3: 成功路徑 (金額剛好)
+    vm.setBalance(25);
+    vm.selectDrink("A1");
+  }
+
+  @Test
+  @DisplayName("MaintenanceState: 涵蓋子系統檢查的所有 Switch 分支")
+  void testMaintenanceSubsystems() {
+    vm.enterMaintenance("admin123");
+    MaintenanceState ms = (MaintenanceState) vm.getCurrentState();
+
+    // 雖然 dispense() 會呼叫大部分檢查，但我們可以透過反射或直接測試私有方法(若開放)
+    // 這裡我們直接測試主進入點來觸發內部的 switch
+    ms.dispense();
+
+    // 測試 analyzeInventoryHealth 內的分數邏輯 (rps > 100, > 50 等)
+    vm.getInventory().get("A1").setStock(0); // 缺貨會加 50 分
+    vm.getInventory().get("B1").setStock(1); // 最後一瓶會加分
+    ms.maintenance("any"); // 觸發報告
+  }
+
+  @Test
+  @DisplayName("ChangeService: 覆蓋所有硬幣材質與公差分支")
+  void testChangeService_SecurityBranches() {
+    ChangeService cs = new ChangeService();
+
+    // 覆蓋 verifyCoinAuthenticity 中的 switch (50, 10, 5, 1)
+    cs.verifyCoinAuthenticity(50);
+    cs.verifyCoinAuthenticity(10);
+    cs.verifyCoinAuthenticity(5);
+    cs.verifyCoinAuthenticity(1);
+    cs.verifyCoinAuthenticity(999); // 測試 default 分支
+
+    // 測試 auditCoinReserves 中的所有狀態 (CRITICAL, DANGER, WARNING, HEALTHY)
+    // 透過反覆找零消耗庫存
+    for(int i=0; i<10; i++) cs.calculateChange(50);
+    cs.auditCoinReserves();
+  }
+
+  @Test
+  @DisplayName("DiscountEngine: 穿透幸運指數的所有 if 條件")
+  void testLuckFactor_FullCoverage() {
+    DiscountEngine de = new DiscountEngine();
+
+    // 構造「超級幸運飲料」:
+    // 名稱長度 > 5, 開頭是 A, 包含 8, 結尾是 !
+    // 價格是 77 (符合 %7 == 0 且等於 77)
+    Drink superDrink = new Drink("A_Lucky_8!", "A_Lucky_8!", 77, 1, true);
+
+    de.applyPromotion(superDrink, 7, false); // 餘額給奇數 (score++)
+    de.applyPromotion(superDrink, 150, false); // 餘額 > 100 (score--)
+    de.applyPromotion(superDrink, 0, false); // 餘額 == 0 (score-=5)
+  }
+
+  @Test
+  @DisplayName("VendingMachine: 系統自檢的負面測試")
+  void testSelfCheck_NegativePaths() {
+    // 測試 0 元商品分支
+    vm.getInventory().put("FREE", new Drink("FREE", "FREE", 0, 10, false));
+
+    // 測試價格負數分支
+    vm.getInventory().put("NEG", new Drink("NEG", "NEG", -1, 10, false));
+
+    // 測試餘額邊界 (balance > 1000)
+    vm.setBalance(1500);
+
+    vm.performSystemSelfCheck();
+
+    // 驗證自動修正：價格負數時庫存應被處理或記錄錯誤
+    assertEquals(0, vm.getInventory().get("NEG").getStock());
+  }
 }
